@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import {MultiGrid,AutoSizer} from 'react-virtualized'
 import { connect } from 'dva';
 import {numberFormat,sortBySymbol} from '../../../../utils/RtUtils'
-import {DIRECTION_TRANSLATER,DIRECTION_LONG,DIRECTION_SHORT, DIRECTION_NET} from '../../../../utils/RtConstant'
+import {DIRECTION_TRANSLATER,DIRECTION_LONG,DIRECTION_SHORT} from '../../../../utils/RtConstant'
 import styles from './Grid.less';
 
 const STYLE = {
@@ -63,7 +63,8 @@ class Center extends PureComponent {
       tableHeight = height;
     }
 
-    const tableList =[]
+
+    const tableList = [];
 
     let columnCount = 0;
     {
@@ -83,51 +84,12 @@ class Center extends PureComponent {
       columnCount+=1
     }
 
-
     
-    list.sort(sortBySymbol).forEach(element => {
-      const newElement = element
-      // 计算持仓价格与最新价格的差距
-      newElement.priceDiff = element.positionProfit/element.contractSize/element.position
-      // 计算最新价格
-      newElement.lastPrice = element.price+newElement.priceDiff
-
-      if(newElement.direction === DIRECTION_LONG||(newElement.position >0 && newElement.direction === DIRECTION_NET)){
-        
-        // 计算最新价格
-        newElement.lastPrice = newElement.price + newElement.priceDiff
-        // 计算开仓价格
-        newElement.openPriceDiff = newElement.lastPrice-element.openPrice
-        // 计算开仓盈亏
-        newElement.openProfit = newElement.openPriceDiff * element.position * element.contractSize
-      }else if(newElement.direction === DIRECTION_SHORT||(newElement.position <0 && newElement.direction === DIRECTION_NET)){
-        
-        // 计算最新价格
-        newElement.lastPrice   =  newElement.price - newElement.priceDiff
-        // 计算开仓价格
-        newElement.openPriceDiff = element.openPrice-newElement.lastPrice
-        // 计算开仓盈亏
-        newElement.openProfit = newElement.openPriceDiff * element.position * element.contractSize
-      }
-
-
-      // 计算保最新合约价值
-      newElement.contractValue = (newElement.openPrice+newElement.openPriceDiff)*element.contractSize*element.position
-
-      if(element.useMargin!==0){
-        newElement.positionProfitRatio = newElement.positionProfit/ element.useMargin
-        newElement.openProfitRatio = newElement.openProfit/ element.useMargin
-        
-      }else{
-        newElement.positionProfitRatio = 0
-        newElement.openProfitRatio = 0
-      }
-    
-
-      newElement.tdFrozen = element.frozen-element.ydFrozen
-      newElement.tdPosition = element.position-element.ydPosition
-      tableList.push(newElement)
-    });
+    if(list !== undefined){
+      list.sort(sortBySymbol).forEach(element => {
+        tableList.push(element)
+      });
+    }
 
     const rowCount = tableList.length;
     
@@ -263,28 +225,28 @@ class Center extends PureComponent {
 
       // 第6列 逐笔浮盈
       if(columnIndex === 7){
-        if(tableList[rowIndex].openProfit > 0){
+        if(tableList[rowIndex].openPositionProfit > 0){
           return(
             <div className={`${styles.cell}  ${styles.displayRight} ${hoveredCellClass} ${styles.colorBuy}`} key={key} style={style}>
-              <div>{numberFormat(tableList[rowIndex].openProfit,4)}<br /></div>
-              <div>{numberFormat(tableList[rowIndex].openProfitRatio*100,2)}%</div>
+              <div>{numberFormat(tableList[rowIndex].openPositionProfit,4)}<br /></div>
+              <div>{numberFormat(tableList[rowIndex].openPositionProfitRatio*100,2)}%</div>
             </div>
           )
         }
         
-        if(tableList[rowIndex].openProfit < 0){
+        if(tableList[rowIndex].openPositionProfit < 0){
           return(
             <div className={`${styles.cell}  ${styles.displayRight} ${hoveredCellClass} ${styles.colorSell}`} key={key} style={style}>
-              <div>{numberFormat(tableList[rowIndex].openProfit,4)}<br /></div>
-              <div>{numberFormat(tableList[rowIndex].openProfitRatio*100,2)}%</div>
+              <div>{numberFormat(tableList[rowIndex].openPositionProfit,4)}<br /></div>
+              <div>{numberFormat(tableList[rowIndex].openPositionProfitRatio*100,2)}%</div>
             </div>
           )
         }
 
         return(
           <div className={`${styles.cell}  ${styles.displayRight} ${hoveredCellClass}`} key={key} style={style}>
-            <div>{numberFormat(tableList[rowIndex].openProfit,4)}<br /></div>
-            <div>{numberFormat(tableList[rowIndex].openProfitRatio*100,2)}%</div>
+            <div>{numberFormat(tableList[rowIndex].openPositionProfit,4)}<br /></div>
+            <div>{numberFormat(tableList[rowIndex].openPositionProfitRatio*100,2)}%</div>
           </div>
         )
 

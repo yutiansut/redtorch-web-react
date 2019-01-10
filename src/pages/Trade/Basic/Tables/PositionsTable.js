@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import {Table} from 'antd';
 import { connect } from 'dva';
 import styles from './Tables.less';
-import {DIRECTION_TRANSLATER,DIRECTION_LONG,DIRECTION_SHORT,DIRECTION_NET} from '../../../../utils/RtConstant'
+import {DIRECTION_TRANSLATER,DIRECTION_LONG,DIRECTION_SHORT} from '../../../../utils/RtConstant'
 import {numberFormat,sortBySymbol} from "../../../../utils/RtUtils"
 
 const INLINE_LABEL_STYLE={
@@ -66,51 +66,11 @@ class Center extends PureComponent {
 
     const tableList = [];
     if(list !== undefined){
-      
       list.sort(sortBySymbol).forEach(element => {
-        const newElement = element
-        // 计算持仓价格与最新价格的差距
-        newElement.priceDiff = element.positionProfit/element.contractSize/element.position
-        // 计算最新价格
-        newElement.lastPrice = element.price+newElement.priceDiff
-  
-        if(newElement.direction === DIRECTION_LONG||(newElement.position >0 && newElement.direction === DIRECTION_NET)){
-          
-          // 计算最新价格
-          newElement.lastPrice = newElement.price + newElement.priceDiff
-          // 计算开仓价格
-          newElement.openPriceDiff = newElement.lastPrice-element.openPrice
-          // 计算开仓盈亏
-          newElement.openProfit = newElement.openPriceDiff * element.position * element.contractSize
-        }else if(newElement.direction === DIRECTION_SHORT||(newElement.position <0 && newElement.direction === DIRECTION_NET)){
-          
-          // 计算最新价格
-          newElement.lastPrice   =  newElement.price - newElement.priceDiff
-          // 计算开仓价格
-          newElement.openPriceDiff = element.openPrice-newElement.lastPrice
-          // 计算开仓盈亏
-          newElement.openProfit = newElement.openPriceDiff * element.position * element.contractSize
-        }
-  
-  
-        // 计算保最新合约价值
-        newElement.contractValue = (newElement.openPrice+newElement.openPriceDiff)*element.contractSize*element.position
-  
-        if(element.useMargin!==0){
-          newElement.positionProfitRatio = newElement.positionProfit/ element.useMargin
-          newElement.openProfitRatio = newElement.openProfit/ element.useMargin
-          
-        }else{
-          newElement.positionProfitRatio = 0
-          newElement.openProfitRatio = 0
-        }
-      
-  
-        newElement.tdFrozen = element.frozen-element.ydFrozen
-        newElement.tdPosition = element.position-element.ydPosition
-        tableList.push(newElement)
-      })
+        tableList.push(element)
+      });
     }
+
     
     let tableScroll = {y: 250,x:1460};
     if(scroll !== undefined){
@@ -160,7 +120,8 @@ class Center extends PureComponent {
           <div style={{color:"#BBB"}}>{ record.gatewayDisplayName}</div>
         </div>
       )
-    },  {
+    },  
+    {
       title: '方向',
       dataIndex: 'direction',
       width: 60,
@@ -180,12 +141,13 @@ class Center extends PureComponent {
           );
         }
         return (
-          <span style={`${styles.displayCenter}`}> 
+          <span className={`${styles.displayCenter}`}> 
             {DIRECTION_TRANSLATER.get(record.direction)}
           </span>
         );
       }
-    }, {
+    }, 
+    {
       title: '持仓',
       dataIndex: 'position',
       width:  120,
@@ -231,32 +193,32 @@ class Center extends PureComponent {
       )
     }, {
       title: '逐笔浮盈',
-      dataIndex: 'openProfit',
+      dataIndex: 'openPositionProfit',
       width:  120,
       align: 'right',
       render:(text,record)=>{
-        if(record.openProfit > 0){
+        if(record.openPositionProfit > 0){
           return(
             <div className={`${styles.displayRight} ${styles.colorBuy}`}>
-              <div>{numberFormat(record.openProfit,4)}<br /></div>
-              <div>{numberFormat(record.openProfitRatio*100,2)}%</div>
+              <div>{numberFormat(record.openPositionProfit,4)}<br /></div>
+              <div>{numberFormat(record.openPositionProfitRatio*100,2)}%</div>
             </div>
           )
         }
         
-        if(record.openProfit < 0){
+        if(record.openPositionProfit < 0){
           return(
             <div className={`${styles.displayRight} ${styles.colorSell}`}>
-              <div>{numberFormat(record.openProfit,4)}<br /></div>
-              <div>{numberFormat(record.openProfitRatio*100,2)}%</div>
+              <div>{numberFormat(record.openPositionProfit,4)}<br /></div>
+              <div>{numberFormat(record.openPositionProfitRatio*100,2)}%</div>
             </div>
           )
         }
     
         return(
           <div className={`${styles.displayRight}`}>
-            <div>{numberFormat(record.openProfit,4)}<br /></div>
-            <div>{numberFormat(record.openProfitRatio*100,2)}%</div>
+            <div>{numberFormat(record.openPositionProfit,4)}<br /></div>
+            <div>{numberFormat(record.openPositionProfitRatio*100,2)}%</div>
           </div>
         )
       }
